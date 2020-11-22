@@ -1,7 +1,7 @@
 import sqlite3
 
 
-def saveData(fname, lname, balance, creditcard, id, password):
+def saveData(fname, lname, balance, creditcard, id, password):  # Adds a row of new user information when they register
     conn = sqlite3.connect('clients.db')
 
     c = conn.cursor()
@@ -17,7 +17,7 @@ def saveData(fname, lname, balance, creditcard, id, password):
     conn.close()
 
 
-def getIDs():
+def getIDs():  # Gets a list of all the IDs of users for login purposes
     conn = sqlite3.connect('clients.db')
 
     c = conn.cursor()
@@ -28,7 +28,7 @@ def getIDs():
     return id_list
 
 
-def getPasswords():
+def getPasswords():  # Gets a list of all the passwords
     conn = sqlite3.connect('clients.db')
 
     c = conn.cursor()
@@ -37,6 +37,10 @@ def getPasswords():
 
     conn.close()
     return pass_list
+
+
+def idPassDict(id_list, pass_list):  # Use this function to create a dictionary of id and password for each user for login purposes
+    pass
 
 
 def getCC(idin):
@@ -63,7 +67,7 @@ def getBalance(idin):
     return balance
 
 
-def getData(idin):
+def getData(idin):  # Gets row of data for specific user once they login
     conn = sqlite3.connect('clients.db')
 
     c = conn.cursor()
