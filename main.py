@@ -2,8 +2,8 @@
 Todo:
 Fix class DONE
 Find a way to make a global instance of class DONE
-Complete service functions
-Add new services.
+Complete service functions DONE
+Add new services. DONE
 """
 
 import string
