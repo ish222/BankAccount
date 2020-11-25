@@ -8,16 +8,18 @@ Add new services.
 
 import string
 import random
-from database import *
+from database import Database
 from datetime import date
+import time
 
 curDate = date.today()
 intCurDate = int(curDate.strftime('%Y%m%d'))
 
+
 class BankAccount:
     def __init__(self, id):
-        self.data = getData(id)  # Data is ('john', 'smith', 2500, 2369149726456860, 'johnJYSvY', 'I=HO1G)y')
-        self.secData = getSecondaryData(id)
+        self.data = Database.getData(id)  # Data is ('john', 'smith', 2500, 2369149726456860, 'johnJYSvY', 'I=HO1G)y')
+        self.secData = Database.getSecondaryData(id)  # id, loan, mortgage, savingsacc, date, mortgageDays
         self.fname = self.data[0]
         self.lname = self.data[1]
         self.balance = self.data[2]
@@ -31,12 +33,14 @@ class BankAccount:
         self.lastDate = date(year=int(self.LastDate[0:4]), month=int(self.LastDate[4:6]), day=int(self.LastDate[6:8]))
         self.dateDelta = (curDate - self.lastDate).days
         self.interestRate = 0
+        self.mortgageDays = self.secData[5]
         if self.loan != 0:
             self.loanInterest()
         if self.savingsacc != 0:
             self.savingsInterest()
-        if self.mortgage != 0:
+        if self.mortgage != 0 and self.dateDelta != 0:
             self.mortgageInterest()
+            self.payMortgage()
 
     def deposit(self, amount):
         self.balance += amount
@@ -47,17 +51,23 @@ class BankAccount:
     def loanInterest(self):
         if self.loan != 0:
             self.interestRate = float(0.15 / 365)
-            self.loan *= ((1 + self.interestRate)*self.dateDelta)
+            self.loan *= ((1 + self.interestRate) * self.dateDelta)
 
     def savingsInterest(self):
         if self.savingsacc != 0:
             self.interestRate = float(0.02 / 365)
-            self.savingsacc *= ((1 + self.interestRate)*self.dateDelta)
+            self.savingsacc *= ((1 + self.interestRate) * self.dateDelta)
 
     def mortgageInterest(self):
         if self.mortgage != 0:
             self.interestRate = float(0.0354 / 365)
-            self.mortgage *= ((1 + self.interestRate)*self.dateDelta)
+            self.mortgage *= ((1 + self.interestRate) * self.dateDelta)
+
+    def payMortgage(self):
+        self.changeBalance = self.mortgage / (self.mortgageDays / self.dateDelta)
+        self.balance -= self.changeBalance
+        self.mortgage -= self.changeBalance
+        self.mortgageDays -= self.dateDelta
 
 
 class NewAccount:
@@ -72,9 +82,9 @@ class NewAccount:
         self.mortgage = 0
         self.savingsacc = 0
         self.date = intCurDate
-        initSaveData(self.fname, self.lname, self.balance, self.credit_card, self.id, self.password)
-        secondaryFuncData(self.id, self.loan, self.mortgage, self.savingsacc, self.date)
-
+        self.mortgageDays = 0
+        Database.initSaveData(self.fname, self.lname, self.balance, self.credit_card, self.id, self.password)
+        Database.secondaryFuncData(self.id, self.loan, self.mortgage, self.savingsacc, self.date, self.mortgageDays)
 
     def newcreditCard(self):
         num_list = string.digits
@@ -133,13 +143,27 @@ class InitSwitches:
         Choose service
         :return:call function of service
         """
-        to_do = int(input(
-            "What would you like to do? \nPress 1 to request or repay a loan.\nPress 2 to request or repay a mortgage.\nPress 3 to deposit to or withdraw from your savings account.\n"
-            "Press 4 to report a fraud.\nPress 5 to go back.\n"))
-        if to_do == 1:
+
+        to_do = input(
+            "What would you like to do? \n"
+            "Press 1 to request or repay a loan.\n"
+            "Press 2 to request or see your mortgage.\n"
+            "Press 3 to deposit to or withdraw from your savings account.\n"
+            "Press 4 to report a fraud.\n"
+            "Press 5 to go back.\n")
+        if to_do == "1":
             SecondarySwitches.loan()
-        print("Services are still in progress! Please come back soon.")
-        main()
+        elif to_do == "2":
+            SecondarySwitches.mortgage()
+        elif to_do == "3":
+            SecondarySwitches.savings()
+        elif to_do == "4":
+            SecondarySwitches.fraud()
+        elif to_do == "5":
+            main()
+        else:
+            print("Invalid input, please try again!")
+            InitSwitches.switch4()
 
     @staticmethod
     def switch5():
@@ -147,8 +171,8 @@ class InitSwitches:
         Log out
         :return: None
         """
-        saveData(id_class.balance, id_class.id)
-        saveSecondaryData(id_class.id, id_class.loan, id_class.mortgage, id_class.savingsacc, intCurDate)
+        Database.saveData(id_class.balance, id_class.id)
+        Database.saveSecondaryData(id_class.id, id_class.loan, id_class.mortgage, id_class.savingsacc, intCurDate, id_class.mortgageDays)
         print("Thank you for using this program!")
         quit()
 
@@ -158,33 +182,151 @@ class SecondarySwitches:
     def loan():
         def addLoanFunc():
             try:
-                addLoan = int(input("The interest rate we offer for loans is 15% APR. \nHow much would you like to take out: "))
+                addLoan = int(
+                    input("The interest rate we offer for loans is 15% APR. \nHow much would you like to take out: "))
             except Exception as e:
                 print("Invalid input ", e)
                 SecondarySwitches.loan()
+            if addLoan < 0:
+                print("Invalid input, you input a negative, please try again!")
+                addLoanFunc()
             id_class.loan += addLoan
+            print(f"Your new loan is: {id_class.loan}")
+            time.sleep(1)
 
         print(f"Your total current outstanding loan is: {id_class.loan}")
         if id_class.loan == 0:
             addLoanFunc()
+            time.sleep(1)
             InitSwitches.switch4()
-        to_do = input("Would you like to repay your loan or take out a new one? 'New' or 'Pay'")
-        if to_do.lower() == "new":
+        to_do = input("Press 1 to repay your loan\nPress 2 to take out a new one\nPress 3 to go back\n")
+        if to_do == "1":
             addLoanFunc()
-        elif to_do.lower() == "pay":
+        elif to_do == "2":
             try:
                 payLoan = int(
                     input("How much would you like to pay back: "))
             except Exception as e:
                 print("Invalid input ", e)
                 SecondarySwitches.loan()
-            if id_class.balance >= payLoan or id_class.loan >= payLoan:
+            if id_class.balance > payLoan or id_class.loan > payLoan:
                 id_class.balance -= payLoan
                 id_class.loan -= payLoan
-            else:
-                print("Your input was either more than your available balance or more than your outstanding loan. Please try again!")
+            elif payLoan < 0:
+                print("Invalid input, you input a negative, please try again!")
+                time.sleep(1)
                 SecondarySwitches.loan()
+            else:
+                print("Your input was either more than your available balance or "
+                      "more than your outstanding loan. Please try again!")
+                time.sleep(1)
+                SecondarySwitches.loan()
+        else:
+            print("Invalid input, please try again!")
+            time.sleep(1)
+            SecondarySwitches.loan()
+        InitSwitches.switch4()
 
+    @staticmethod
+    def savings():
+        def addSavings():
+            try:
+                amount = int(input("How much would you like to add to your savings account: "))
+            except Exception as e:
+                print(f"Invalid input: {e}\nTry again!")
+                time.sleep(1)
+                addSavings()
+            if amount > id_class.balance:
+                print(
+                    "You don't have that much money in your account! Please input a value equal to or lower than your current balance!")
+                addSavings()
+            elif amount < 0:
+                print("Invalid input, you input a negative, please try again!")
+                time.sleep(1)
+                addSavings()
+            else:
+                id_class.savingsacc += amount
+                id_class.balance -= amount
+                print(f"Success, your new savings balance is: {id_class.savingsacc}\n"
+                      f"Your new balance is: {id_class.balance}")
+                time.sleep(1)
+                InitSwitches.switch4()
+
+        def withdraw():
+            try:
+                amount = int(input("How much would you like to withdraw from your savings account?"))
+            except Exception as e:
+                print(f"Invalid input: {e}\nTry again!")
+                time.sleep(1)
+                withdraw()
+            if amount > id_class.savingsacc:
+                print("You dont have that much in your savings account, please try again!")
+                withdraw()
+            elif amount < 0:
+                print("Invalid input, you input a negative, please try again!")
+                time.sleep(1)
+                withdraw()
+            else:
+                id_class.savings -= amount
+                id_class.balance += amount
+
+        if id_class.savingsacc == 0:
+            print("You have no money in your savings account. Please add some.")
+            addSavings()
+            InitSwitches.switch4()
+
+        else:
+            print(f"Your current savings are: {id_class.savingsacc}")
+            to_do = input(
+                "Press 1 to transfer to your savings account\nPress 2 to withdraw from your savings account\nPress 3 to go back\n")
+            if to_do == "1":
+                addSavings()
+            elif to_do == "2":
+                withdraw()
+            elif to_do == "3":
+                InitSwitches.switch4()
+            else:
+                print("Invalid input please try again!")
+                time.sleep(1)
+                SecondarySwitches.savings()
+        InitSwitches.switch4()
+
+    @staticmethod
+    def mortgage():
+        def addMortgage():
+            try:
+                amount = int(input(
+                    "We offer 10 year mortgage deals at 3.54% APR interest!\nPlease input how much mortgage you want to take out: "))
+            except Exception as e:
+                print(f"Invalid input: {e}\nPlease try again!")
+                addMortgage()
+            if amount <= 0:
+                print("Invalid input, you input 0 or a negative number! Please try again.")
+                addMortgage()
+            else:
+                id_class.mortgage = amount
+                id_class.mortgageDays = 365
+            print(f"Your new mortgage is: {id_class.mortgage}")
+            time.sleep(1)
+
+        print(f"You current outstanding mortgage is: {id_class.mortgage}")
+        time.sleep(1)
+        if id_class.mortgage == 0:
+            addMortgage()
+        else:
+            InitSwitches.switch4()
+        InitSwitches.switch4()
+
+    @staticmethod
+    def fraud():
+        text = input("Please, in as much detail as possible, write the details of the fraud you want to report:\n"
+                     "Please press enter at the END of your message.\nMessage: ")
+        with open("reports.txt", 'a') as f:
+            f.write(f"Id = {id_class}, Date = {curDate}, Report message = {text}\n")
+        time.sleep(1)
+        print("Thanks, we've received your message. We appreciate your assistance.")
+        time.sleep(1.5)
+        InitSwitches.switch4()
 
 
 def instance(id):
@@ -218,9 +360,11 @@ def newAcc():
 
 
 def login():
-    u_name = input("Please input your banking ID: (or leave empty to go back). ")
-    id_list = getIDs()
-    pass_list = getPasswords()
+    u_name = input("Welcome to your banking service.\nPlease input your banking ID: (type 'New' if you are a new customer!) ")
+    if u_name.lower == "new":
+        newAcc()
+    id_list = Database.getIDs()
+    pass_list = Database.getPasswords()
     id_dict = {}
     for i in range(len(id_list)):
         id_dict[id_list[i]] = pass_list[i]
@@ -236,26 +380,17 @@ def login():
             print("Wrong password, please try again!")
             login()
     elif u_name == "":
-        firstFunction()
+        login()
     else:
         print("Invalid username, please try again!")
         login()
 
 
-def firstFunction():
-    print(f"Today's date is: {curDate}")
-    new = input("Welcome to your banking service.\nAre you a new or returning customer? Please type 'New' for new or 'old' for returning customer. ")
-    if new.lower() == "new":
-        newAcc()
-    elif new.lower() == "old":
-        login()
-    else:
-        print("Invalid input please try again.")
-        firstFunction()
-
-
 def main():
-    to_do = input("What would you like to do? \nPress 1 to deposit.\nPress 2 to withdraw.\nPress 3 to get your credit card number.\nPress 4 for a service.\nPress 5 to log out.\n")
+    time.sleep(1)
+    to_do = input("What would you like to do? \nPress 1 to deposit.\nPress 2 to withdraw.\n"
+                  "Press 3 to get your credit card number.\nPress 4 for a service.\nPress 5 to log out.\n")
+
     def toDo(switch):
         """
         Functionality of a switch statement, didnt want to use too many conditional statements
@@ -264,9 +399,9 @@ def main():
         """
         func = "InitSwitches."  "switch" + str(switch)
         eval(func + "()")
+
     toDo(to_do)
 
 
 # Loan, mortgage, savings account, report a fraud.
-firstFunction()
-
+login()
