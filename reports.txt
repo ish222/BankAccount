@@ -1,1 +1,1 @@
-Id = <__main__.BankAccount object at 0x000001C70E5CDD90>, Date = 2020-11-25, Report message = Test report.
+Id = testrweEV, Date = 2020-11-25, Report message = Test Report

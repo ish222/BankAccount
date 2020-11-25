@@ -322,7 +322,7 @@ class SecondarySwitches:
         text = input("Please, in as much detail as possible, write the details of the fraud you want to report:\n"
                      "Please press enter at the END of your message.\nMessage: ")
         with open("reports.txt", 'a') as f:
-            f.write(f"Id = {id_class}, Date = {curDate}, Report message = {text}\n")
+            f.write(f"Id = {id_class.id}, Date = {curDate}, Report message = {text}\n")
         time.sleep(1)
         print("Thanks, we've received your message. We appreciate your assistance.")
         time.sleep(1.5)
