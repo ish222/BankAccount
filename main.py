@@ -390,6 +390,11 @@ def main():
     time.sleep(1)
     to_do = input("What would you like to do? \nPress 1 to deposit.\nPress 2 to withdraw.\n"
                   "Press 3 to get your credit card number.\nPress 4 for a service.\nPress 5 to log out.\n")
+    allowedInputs = ["1", "2", "3", "4", "5"]
+    if to_do not in allowedInputs:
+        print("Invalid input, please try again.")
+        time.sleep(0.5)
+        main()
 
     def toDo(switch):
         """
