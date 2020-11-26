@@ -200,9 +200,9 @@ class SecondarySwitches:
             time.sleep(1)
             InitSwitches.switch4()
         to_do = input("Press 1 to repay your loan\nPress 2 to take out a new one\nPress 3 to go back\n")
-        if to_do == "1":
+        if to_do == "2":
             addLoanFunc()
-        elif to_do == "2":
+        elif to_do == "1":
             try:
                 payLoan = int(
                     input("How much would you like to pay back: "))
@@ -212,6 +212,8 @@ class SecondarySwitches:
             if id_class.balance > payLoan or id_class.loan > payLoan:
                 id_class.balance -= payLoan
                 id_class.loan -= payLoan
+                print(f"Your remaining loan is: {id_class.loan:.2f}")
+                time.sleep(1)
             elif payLoan < 0:
                 print("Invalid input, you input a negative, please try again!")
                 time.sleep(1)
@@ -248,7 +250,7 @@ class SecondarySwitches:
                 id_class.savingsacc += amount
                 id_class.balance -= amount
                 print(f"Success, your new savings balance is: {id_class.savingsacc}\n"
-                      f"Your new balance is: {id_class.balance}")
+                      f"Your new balance is: {id_class.balance:.2f}")
                 time.sleep(1)
                 InitSwitches.switch4()
 
@@ -276,7 +278,7 @@ class SecondarySwitches:
             InitSwitches.switch4()
 
         else:
-            print(f"Your current savings are: {id_class.savingsacc}")
+            print(f"Your current savings are: {id_class.savingsacc:.2f}")
             to_do = input(
                 "Press 1 to transfer to your savings account\nPress 2 to withdraw from your savings account\nPress 3 to go back\n")
             if to_do == "1":
@@ -309,7 +311,7 @@ class SecondarySwitches:
             print(f"Your new mortgage is: {id_class.mortgage}")
             time.sleep(1)
 
-        print(f"You current outstanding mortgage is: {id_class.mortgage}")
+        print(f"You current outstanding mortgage is: {id_class.mortgage:.2f}")
         time.sleep(1)
         if id_class.mortgage == 0:
             addMortgage()
@@ -374,7 +376,7 @@ def login():
             instance(u_name)
             name = id_class.fname + " " + id_class.lname
             print(f"Welcome {name.capitalize()}!\n\nYou've logged in!\n")
-            print(f"Your current balance is {id_class.balance}\n")
+            print(f"Your current balance is {id_class.balance:.2f}\n")
             main()
         else:
             print("Wrong password, please try again!")
